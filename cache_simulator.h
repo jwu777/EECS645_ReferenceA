@@ -2,40 +2,53 @@
 #ifndef cache_simulator_h
 #define cache_simulator_h
 
-#define CacheSize_Exp       15
-#define CacheSize_Nbr       (1 << CacheSize_Exp)
+/**
+**/
+#define CacheSizeExp 15
+#define CacheSize (1 << CacheSizeExp)
 
-#define AddressSize_Exp     32
+#define AddressSizeBits 32
 
-#define Associativity_Exp   2
-#define Associativity       (1 << Associativity_Exp)
+#define AddressSizeByte (AddressSizeBits >> 3)
 
-#define BlockSize_Exp       6
-#define BlockSize           (1 << BlockSize_Exp)
+/**
+  Cache Size
+**/
+#define CacheAssociativityExp 2
+#define CacheAssociativity (1 << CacheAssociativityExp)
 
-#define Lines_Exp           ((CacheSize_Exp) - (Associativity_Exp + BlockSize_Exp))
-#define LineNbr             (1 << Lines_Exp)
-#define Lines_Mask          (LineNbr - 1)
+#define BlockSizeExp 6
+#define BlockSize (1 << BlockSizeExp)
+#define BlockSizeMask (BlockSize - 1)
 
-#define Tag_Exp             (AddressSize_Exp - BlockSize_Exp - Lines_Exp)
-#define TagNbr              (1 << Tag_Exp)
-#define Tag_Mask            (TagNbr - 1)
+#define LineSizeExp (CacheSizeExp - (CacheAssociativityExp + BlockSizeExp))
+#define LineSize (1 << LineSizeExp)
+#define LineSizeMask (LineSize - 1)
+
+#define TagExp (AddressSizeBits - (BlockSizeExp + LineSizeExp))
+#define TagSize (1 << TagExp)
+#define TagSizeMask (TagSize - 1)
+
+int cacheHit = 0;
+int cacheMiss = 0;
 
 /**
 	Make a cache, with every line being invalid
 **/
 /** typedef added "clean up" code and reduce repetition of "struct" **/
-typedef struct CacheLine
-{
-	int valid;
-	int tag;
-	int recent;
-
+typedef struct CacheLine {
+  bool valid;
+  bool full;
+  uint32_t tag;
 } CacheLine; /** struct variable **/
 
-CacheLine cache[LineNbr][Associativity];
+CacheLine cache[LineSize][CacheAssociativity] = {};
 
-int hits = 0, misses = 0;
-float hitRatio = 0;
+void PrintParameters();
+
+/** Replacement Algorithm **/
+void updateCache(uint32_t address);
+
+void ReadFromTraceFile();
 
 #endif
